@@ -9,7 +9,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "hono": "^4.5.9"
+    "@google/generative-ai": "^0.17.1",
+    "hono": "^4.5.9",
+    "zod": "^3.23.8"
   },
   "scripts": {
     "start": "bun run index.ts"
