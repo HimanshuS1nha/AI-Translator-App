@@ -1,10 +1,23 @@
 import { View, Text, Image, TextInput, Pressable } from "react-native";
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import tw from "twrnc";
 import { FontAwesome6, Entypo, FontAwesome5 } from "@expo/vector-icons";
 
 const Home = () => {
+  const [fromLanguage, setFromLanguage] = useState("English");
+  const [toLanguage, setToLanguage] = useState("Hindi");
+  const [actualText, setActualText] = useState("");
+  const [translatedText, setTranslatedText] = useState("");
+
+  const switchLanguages = useCallback(() => {
+    const tempLanguage = toLanguage;
+    const tempText = translatedText;
+    setToLanguage(fromLanguage);
+    setFromLanguage(tempLanguage);
+    setTranslatedText(actualText);
+    setActualText(tempText);
+  }, [fromLanguage, toLanguage, actualText, translatedText]);
   return (
     <SafeAreaView style={tw`bg-white flex-1`}>
       <View style={tw`flex-row justify-center items-center gap-x-3 pt-2 pb-4`}>
@@ -18,16 +31,22 @@ const Home = () => {
       <View
         style={tw`mt-3 mx-5 bg-purple-200 px-6 py-3 rounded-full flex-row justify-between items-center shadow-lg shadow-gray-700`}
       >
-        <Text style={tw`text-lg font-medium`}>English</Text>
-        <FontAwesome6 name="arrow-right-arrow-left" size={22} color="black" />
-        <Text style={tw`text-lg font-medium`}>Hindi</Text>
+        <View style={tw`w-[130px] items-start`}>
+          <Text style={tw`text-lg font-medium`}>{fromLanguage}</Text>
+        </View>
+        <Pressable onPress={switchLanguages}>
+          <FontAwesome6 name="arrow-right-arrow-left" size={22} color="black" />
+        </Pressable>
+        <View style={tw`w-[130px] items-end`}>
+          <Text style={tw`text-lg font-medium`}>{toLanguage}</Text>
+        </View>
       </View>
 
       <View
         style={tw`mt-8 mx-5 bg-purple-200 p-5 rounded-xl shadow-lg shadow-gray-700 gap-y-4`}
       >
         <View style={tw`flex-row justify-between items-center`}>
-          <Text style={tw`text-lg font-medium`}>English</Text>
+          <Text style={tw`text-lg font-medium`}>{fromLanguage}</Text>
           <Entypo name="cross" size={22} color="black" />
         </View>
 
@@ -36,6 +55,7 @@ const Home = () => {
             style={tw`max-h-24 text-base`}
             placeholder="Type here..."
             multiline
+            value={actualText}
           />
         </View>
 
@@ -48,13 +68,14 @@ const Home = () => {
       <View
         style={tw`mt-8 mx-5 bg-purple-200 p-5 rounded-xl shadow-lg shadow-gray-700 gap-y-4`}
       >
-        <Text style={tw`text-lg font-medium`}>Hindi</Text>
+        <Text style={tw`text-lg font-medium`}>{toLanguage}</Text>
 
         <View style={tw`h-24`}>
           <TextInput
             style={tw`max-h-24 text-base text-black`}
             multiline
             readOnly={true}
+            value={translatedText}
           />
         </View>
 
