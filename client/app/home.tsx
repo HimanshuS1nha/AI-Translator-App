@@ -1,10 +1,22 @@
-import { View, Text, Image, TextInput, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  Pressable,
+  ToastAndroid,
+  Platform,
+  Alert,
+} from "react-native";
 import React, { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import tw from "twrnc";
 import { FontAwesome6, Entypo, FontAwesome5 } from "@expo/vector-icons";
 import { Dropdown } from "react-native-element-dropdown";
 import * as SecureStore from "expo-secure-store";
+import * as Clipboard from "expo-clipboard";
+import { useMutation } from "@tanstack/react-query";
+import axios, { AxiosError } from "axios";
 
 import { languages } from "@/constants/languages";
 
@@ -48,6 +60,19 @@ const Home = () => {
     },
     []
   );
+
+  const handleCopyToClipboard = useCallback(async () => {
+    if (translatedText === "") {
+      await Clipboard.setStringAsync(translatedText);
+      if (Platform.OS === "android") {
+        ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
+      } else {
+        Alert.alert("Copied to clipboard");
+      }
+    }
+  }, [translatedText]);
+
+  const clearInput = useCallback(() => setActualText(""), []);
   return (
     <SafeAreaView style={tw`bg-white flex-1`}>
       <View style={tw`flex-row justify-center items-center gap-x-3 pt-2 pb-4`}>
@@ -95,7 +120,9 @@ const Home = () => {
       >
         <View style={tw`flex-row justify-between items-center`}>
           <Text style={tw`text-lg font-medium`}>{fromLanguage}</Text>
-          <Entypo name="cross" size={22} color="black" />
+          <Pressable onPress={clearInput}>
+            <Entypo name="cross" size={22} color="black" />
+          </Pressable>
         </View>
 
         <View style={tw`h-24`}>
@@ -129,7 +156,7 @@ const Home = () => {
         </View>
 
         <View style={tw`items-end`}>
-          <Pressable>
+          <Pressable onPress={handleCopyToClipboard}>
             <FontAwesome5 name="copy" size={24} color="black" />
           </Pressable>
         </View>
