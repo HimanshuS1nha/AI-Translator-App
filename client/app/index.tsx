@@ -13,7 +13,7 @@ export default function Index() {
   }, []);
   return (
     <SafeAreaView
-      style={tw`flex-1 items-center justify-center gap-y-12 bg-gray-100`}
+      style={tw`flex-1 items-center justify-center gap-y-12 bg-white`}
     >
       <View style={tw`gap-y-4 items-center`}>
         <Image
@@ -22,7 +22,7 @@ export default function Index() {
         />
         <Text style={tw`font-bold text-3xl`}>Translator App</Text>
       </View>
-      <ActivityIndicator size={45} color={"green"} />
+      <ActivityIndicator size={45} color={"puple"} />
     </SafeAreaView>
   );
 }
