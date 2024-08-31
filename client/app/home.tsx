@@ -17,8 +17,10 @@ import * as SecureStore from "expo-secure-store";
 import * as Clipboard from "expo-clipboard";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
+import { z, ZodError } from "zod";
 
 import { languages } from "@/constants/languages";
+import { transformFile } from "@babel/core";
 
 const Home = () => {
   const [fromLanguage, setFromLanguage] = useState(
@@ -48,15 +50,15 @@ const Home = () => {
   const handleLanguageChange = useCallback(
     (type: "from" | "to", value: string) => {
       if (type === "from") {
+        setActualText("");
+        setTranslatedText("");
         SecureStore.setItem("from-language", value);
         setFromLanguage(value);
       } else if (type === "to") {
+        setActualText("");
         SecureStore.setItem("to-language", value);
         setToLanguage(value);
       }
-
-      setActualText("");
-      setTranslatedText("");
     },
     []
   );
@@ -67,12 +69,57 @@ const Home = () => {
       if (Platform.OS === "android") {
         ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
       } else {
-        Alert.alert("Copied to clipboard");
+        Alert.alert("Message", "Copied to clipboard");
       }
     }
   }, [translatedText]);
 
   const clearInput = useCallback(() => setActualText(""), []);
+
+  const { mutate: handleTranslate, isPending } = useMutation({
+    mutationKey: ["translate"],
+    mutationFn: async () => {
+      const validator = z.object({
+        text: z
+          .string({ required_error: "Please write something first" })
+          .trim()
+          .min(1, { message: "Please write something first" }),
+        fromLanguage: z
+          .string({ required_error: "Language is required" })
+          .trim()
+          .min(1, { message: "Language is required" }),
+        toLanguage: z
+          .string({ required_error: "Language is required" })
+          .trim()
+          .min(1, { message: "Language is required" }),
+      });
+
+      const parsedData = await validator.parseAsync({
+        fromLanguage,
+        toLanguage,
+        text: actualText,
+      });
+
+      const { data } = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/translate`,
+        { ...parsedData }
+      );
+
+      return data as { translatedText: string };
+    },
+    onSuccess: (data) => {
+      setTranslatedText(data.translatedText);
+    },
+    onError: (error) => {
+      if (error instanceof ZodError) {
+        Alert.alert("Error", error.errors[0].message);
+      } else if (error instanceof AxiosError && error.response?.data.error) {
+        Alert.alert("Error", error.response.data.error);
+      } else {
+        Alert.alert("Error", "Some error occured. Please try again later!");
+      }
+    },
+  });
   return (
     <SafeAreaView style={tw`bg-white flex-1`}>
       <View style={tw`flex-row justify-center items-center gap-x-3 pt-2 pb-4`}>
@@ -98,7 +145,7 @@ const Home = () => {
             onChange={(item) => handleLanguageChange("from", item.value)}
           />
         </View>
-        <Pressable onPress={switchLanguages}>
+        <Pressable onPress={switchLanguages} disabled={isPending}>
           <FontAwesome6 name="arrow-right-arrow-left" size={22} color="black" />
         </Pressable>
         <View style={tw`w-[130px] items-end`}>
@@ -120,7 +167,7 @@ const Home = () => {
       >
         <View style={tw`flex-row justify-between items-center`}>
           <Text style={tw`text-lg font-medium`}>{fromLanguage}</Text>
-          <Pressable onPress={clearInput}>
+          <Pressable onPress={clearInput} disabled={isPending}>
             <Entypo name="cross" size={22} color="black" />
           </Pressable>
         </View>
@@ -136,8 +183,16 @@ const Home = () => {
         </View>
 
         <View style={tw`items-end`}>
-          <Pressable style={tw`bg-orange-600 px-6 py-2.5 rounded-full`}>
-            <Text style={tw`text-white text-base`}>Translate</Text>
+          <Pressable
+            style={tw`${
+              isPending ? "bg-orange-300" : "bg-orange-600"
+            } px-6 py-2.5 rounded-full`}
+            onPress={() => handleTranslate()}
+            disabled={isPending}
+          >
+            <Text style={tw`text-white text-base`}>
+              {isPending ? "Please wait..." : "Translate"}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -156,7 +211,7 @@ const Home = () => {
         </View>
 
         <View style={tw`items-end`}>
-          <Pressable onPress={handleCopyToClipboard}>
+          <Pressable onPress={handleCopyToClipboard} disabled={isPending}>
             <FontAwesome5 name="copy" size={24} color="black" />
           </Pressable>
         </View>
