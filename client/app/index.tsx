@@ -22,7 +22,7 @@ export default function Index() {
         />
         <Text style={tw`font-bold text-3xl`}>Translator App</Text>
       </View>
-      <ActivityIndicator size={45} color={"puple"} />
+      <ActivityIndicator size={45} color={"purple"} />
     </SafeAreaView>
   );
 }

@@ -3,21 +3,51 @@ import React, { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import tw from "twrnc";
 import { FontAwesome6, Entypo, FontAwesome5 } from "@expo/vector-icons";
+import { Dropdown } from "react-native-element-dropdown";
+import * as SecureStore from "expo-secure-store";
+
+import { languages } from "@/constants/languages";
 
 const Home = () => {
-  const [fromLanguage, setFromLanguage] = useState("English");
-  const [toLanguage, setToLanguage] = useState("Hindi");
+  const [fromLanguage, setFromLanguage] = useState(
+    SecureStore.getItem("from-language") ?? "English"
+  );
+  const [toLanguage, setToLanguage] = useState(
+    SecureStore.getItem("to-language") ?? "Hindi"
+  );
   const [actualText, setActualText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
 
   const switchLanguages = useCallback(() => {
     const tempLanguage = toLanguage;
-    const tempText = translatedText;
+    SecureStore.setItem("to-language", fromLanguage);
+    SecureStore.setItem("from-language", tempLanguage);
     setToLanguage(fromLanguage);
     setFromLanguage(tempLanguage);
-    setTranslatedText(actualText);
-    setActualText(tempText);
+    setTranslatedText("");
+    setActualText("");
   }, [fromLanguage, toLanguage, actualText, translatedText]);
+
+  const handleChangeText = useCallback(
+    (value: string) => setActualText(value),
+    []
+  );
+
+  const handleLanguageChange = useCallback(
+    (type: "from" | "to", value: string) => {
+      if (type === "from") {
+        SecureStore.setItem("from-language", value);
+        setFromLanguage(value);
+      } else if (type === "to") {
+        SecureStore.setItem("to-language", value);
+        setToLanguage(value);
+      }
+
+      setActualText("");
+      setTranslatedText("");
+    },
+    []
+  );
   return (
     <SafeAreaView style={tw`bg-white flex-1`}>
       <View style={tw`flex-row justify-center items-center gap-x-3 pt-2 pb-4`}>
@@ -32,13 +62,31 @@ const Home = () => {
         style={tw`mt-3 mx-5 bg-purple-200 px-6 py-3 rounded-full flex-row justify-between items-center shadow-lg shadow-gray-700`}
       >
         <View style={tw`w-[130px] items-start`}>
-          <Text style={tw`text-lg font-medium`}>{fromLanguage}</Text>
+          <Dropdown
+            style={tw`w-full`}
+            selectedTextStyle={tw`text-lg font-medium`}
+            data={languages}
+            labelField={"label"}
+            valueField={"value"}
+            iconStyle={tw`hidden`}
+            value={fromLanguage}
+            onChange={(item) => handleLanguageChange("from", item.value)}
+          />
         </View>
         <Pressable onPress={switchLanguages}>
           <FontAwesome6 name="arrow-right-arrow-left" size={22} color="black" />
         </Pressable>
         <View style={tw`w-[130px] items-end`}>
-          <Text style={tw`text-lg font-medium`}>{toLanguage}</Text>
+          <Dropdown
+            style={tw`w-full`}
+            selectedTextStyle={tw`text-lg font-medium absolute right-0`}
+            iconStyle={tw`hidden`}
+            data={languages}
+            labelField={"label"}
+            valueField={"value"}
+            value={toLanguage}
+            onChange={(item) => handleLanguageChange("to", item.value)}
+          />
         </View>
       </View>
 
@@ -56,6 +104,7 @@ const Home = () => {
             placeholder="Type here..."
             multiline
             value={actualText}
+            onChangeText={handleChangeText}
           />
         </View>
 
