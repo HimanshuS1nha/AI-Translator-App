@@ -7,6 +7,7 @@ import {
   ToastAndroid,
   Platform,
   Alert,
+  Keyboard,
 } from "react-native";
 import React, { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -55,7 +56,7 @@ const Home = () => {
         SecureStore.setItem("from-language", value);
         setFromLanguage(value);
       } else if (type === "to") {
-        setActualText("");
+        setTranslatedText("");
         SecureStore.setItem("to-language", value);
         setToLanguage(value);
       }
@@ -64,7 +65,7 @@ const Home = () => {
   );
 
   const handleCopyToClipboard = useCallback(async () => {
-    if (translatedText === "") {
+    if (translatedText !== "") {
       await Clipboard.setStringAsync(translatedText);
       if (Platform.OS === "android") {
         ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
@@ -74,7 +75,10 @@ const Home = () => {
     }
   }, [translatedText]);
 
-  const clearInput = useCallback(() => setActualText(""), []);
+  const clearInput = useCallback(() => {
+    setActualText("");
+    setTranslatedText("");
+  }, []);
 
   const { mutate: handleTranslate, isPending } = useMutation({
     mutationKey: ["translate"],
@@ -100,6 +104,10 @@ const Home = () => {
         text: actualText,
       });
 
+      if (parsedData.fromLanguage === parsedData.toLanguage) {
+        throw new Error("Please select two different languages.");
+      }
+
       const { data } = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/api/translate`,
         { ...parsedData }
@@ -116,7 +124,7 @@ const Home = () => {
       } else if (error instanceof AxiosError && error.response?.data.error) {
         Alert.alert("Error", error.response.data.error);
       } else {
-        Alert.alert("Error", "Some error occured. Please try again later!");
+        Alert.alert("Error", error.message);
       }
     },
   });
@@ -179,6 +187,10 @@ const Home = () => {
             multiline
             value={actualText}
             onChangeText={handleChangeText}
+            onSubmitEditing={() => {
+              Keyboard.dismiss();
+              handleTranslate();
+            }}
           />
         </View>
 
@@ -187,7 +199,10 @@ const Home = () => {
             style={tw`${
               isPending ? "bg-orange-300" : "bg-orange-600"
             } px-6 py-2.5 rounded-full`}
-            onPress={() => handleTranslate()}
+            onPress={() => {
+              Keyboard.dismiss();
+              handleTranslate();
+            }}
             disabled={isPending}
           >
             <Text style={tw`text-white text-base`}>
