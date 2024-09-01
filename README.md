@@ -33,7 +33,7 @@ Break down language barriers effortlessly with our AI-powered translation app, d
 
 ## Demo
 
-Live Demo - Coming Soon
+Live Demo - [Click Here](https://www.youtube.com/shorts/pKUknjRwhNQ)
 
 ## 🚀 About Me
 
