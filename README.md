@@ -2,6 +2,10 @@
 
 Break down language barriers effortlessly with our AI-powered translation app, delivering accurate translations.
 
+## Screenshots
+
+![AI Translator App](https://github.com/user-attachments/assets/6864f38b-1341-4adb-89b0-909336935568)
+
 ## Get started
 
 1. Add Google Gemini API key in a .env file in the server folder.
